@@ -10,6 +10,16 @@ mkdir build && cd build && cmake ../xtools  && make
 ```
 # 配置
 
+```
+# xtools configue example
+[a]
+local 127.0.0.1 root pass 22 tag1|tag2
+[b]
+local 127.0.0.1 root pass 22 tag1|tag2
+local 127.0.0.1 root pass 22 tag1|tag2
+local 127.0.0.1 root pass 22 tag1|tag3
+```
+
 # 使用
 
 ```
@@ -22,10 +32,10 @@ mkdir build && cd build && cmake ../xtools  && make
 ./xsh l(login) a-0  登录a组下的0号机器
 
 " 远程执行命令
-./xsh r(run) 0 ls
-./xsh r(run) a-0 ls
-./xsh r(run) a-tag1 ls
-./xsh r(run) a ls
+./xsh r(run) 0 ls       在0号机器执行命令
+./xsh r(run) a-0 ls     在a组的0号机器执行命令
+./xsh r(run) a-tag1 ls  在a组持有tag1的所有机器执行命令
+./xsh r(run) a ls       在a组的所有机器执行命令
 
 " 远程拷贝
 ./xcp ./tmp/file    0:/tmp/     本地到远程0号机器
