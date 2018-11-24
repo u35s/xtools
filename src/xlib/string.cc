@@ -2,6 +2,7 @@
  * Copyright [2018] <Copyright u35s>
  */
 
+#include <algorithm>
 #include "xlib/string.h"
 
 namespace xlib {
@@ -31,6 +32,24 @@ void Split(const std::string& str,
 
         begin_index = end_index + delim_length;
     }
+}
+
+std::string& Ltrim(std::string& str) { // NOLINT
+    std::string::iterator it = find_if(str.begin(), str.end(), std::not1(std::ptr_fun(::isspace)));
+    str.erase(str.begin(), it);
+    return str;
+}
+
+std::string& Rtrim(std::string& str) { // NOLINT
+    std::string::reverse_iterator it = find_if(str.rbegin(),
+        str.rend(), std::not1(std::ptr_fun(::isspace)));
+
+    str.erase(it.base(), str.end());
+    return str;
+}
+
+std::string& Trim(std::string& str) { // NOLINT
+    return Rtrim(Ltrim(str));
 }
 
 }  // namespace xlib

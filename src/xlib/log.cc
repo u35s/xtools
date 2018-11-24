@@ -4,17 +4,66 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <signal.h>
+#include <memory.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdarg.h>
 #include <unistd.h>
 #include "xlib/log.h"
+#include "xlib/trace.h"
 
 namespace xlib {
+
+static const struct {
+        int number;
+        const char* name;
+    } g_failure_signals[] = {
+        { SIGSEGV, "SIGSEGV" },
+        { SIGILL,  "SIGILL"  },
+        { SIGFPE,  "SIGFPE"  },
+        { SIGABRT, "SIGABRT" },
+        { SIGBUS,  "SIGBUS"  },
+        { SIGTERM, "SIGTERM" }
+    };
+
+static struct sigaction g_sigaction_bak[ARRAYSIZE(g_failure_signals)];
+
+void on_error_signal(int signum, siginfo_t* siginfo, void* ucontext) {
+    // 获取信号名
+    const char* signame = "";
+    uint32_t i = 0;
+    for (; i < ARRAYSIZE(g_failure_signals); i++) {
+        if (g_failure_signals[i].number == signum) {
+            signame = g_failure_signals[i].name;
+            break;
+        }
+    }
+    ERR("recive signal %d, %s", signum, signame);
+    xlib::PrintStack();
+
+    // 恢复默认处理
+    sigaction(signum, &g_sigaction_bak[i], NULL);
+    kill(getpid(), signum);
+}
+
+// 错误信号处理
+void init_error_signal() {
+    struct sigaction sig_action;
+    memset(&sig_action, 0, sizeof(sig_action));
+    sigemptyset(&sig_action.sa_mask);
+    sig_action.sa_flags |= SA_SIGINFO;
+    sig_action.sa_sigaction = &on_error_signal;
+
+    for (uint32_t i = 0; i < ARRAYSIZE(g_failure_signals); i++) {
+        sigaction(g_failure_signals[i].number, &sig_action, &g_sigaction_bak[i]);
+    }
+}
 
 static const char*  g_priority_str[] = { "NULL", "TRACE", "DEBUG", "INFO", "ERROR", "FATAL" };
 
 Log::Log() : m_log_priority(LOG_PRIORITY_INFO), m_log_fd(-1) {
+    init_error_signal();
 }
 
 Log::~Log() {
@@ -57,6 +106,7 @@ void Log::Write(LOG_PRIORITY pri, const char* file, uint32_t line, const char* f
     if (pre_len < 0) {
         pre_len = 0;
     }
+    pre_len = 0;
     va_list ap;
     va_start(ap, fmt);
     int len = vsnprintf(buff + pre_len, ARRAYSIZE(buff) - pre_len, fmt, ap);

@@ -12,6 +12,11 @@ namespace xlib {
 
 void Split(const std::string& text, const std::string& sep, std::vector<std::string>* strs);
 
+std::string& Ltrim(std::string& str); // NOLINT
+std::string& Rtrim(std::string& str); // NOLINT
+std::string& Trim(std::string& str);  // NOLINT
+
 }  // namespace xlib
+
 
 #endif  // XLIB_STRING_H_

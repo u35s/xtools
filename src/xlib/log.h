@@ -99,7 +99,7 @@ class Log {
 
     template <typename First, typename... Rest>
     void Format(std::string* format,  const First& first, const Rest&... rest) {
-        size_t index = format->find_first_of("##");
+        size_t index = format->find_first_of("%v");
         if (index == std::string::npos) {
             return;
         }
