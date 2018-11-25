@@ -17,18 +17,18 @@
 #ifdef HAVE_WINSOCK2_H
 # include <winsock2.h>
 #endif
-//#ifdef HAVE_SYS_SOCKET_H
+#ifdef HAVE_SYS_SOCKET_H
 # include <sys/socket.h>
-//#endif
-//#ifdef HAVE_NETINET_IN_H
+#endif
+#ifdef HAVE_NETINET_IN_H
 # include <netinet/in.h>
-//#endif
+#endif
 # ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
-//# ifdef HAVE_ARPA_INET_H
+# ifdef HAVE_ARPA_INET_H
 #include <arpa/inet.h>
-//#endif
+#endif
 
 #include <sys/types.h>
 #include <fcntl.h>
@@ -159,13 +159,13 @@ int main(int argc, char *argv[])
 
     /* if we got an 4. argument we set this option if supported */
     if(argc > 5) {
-        if ((auth_pw & 1) && !strcasecmp(argv[4], "-p")) {
+        if ((auth_pw & 1) && !strcasecmp(argv[5], "-p")) {
             auth_pw = 1;
         }
-        if ((auth_pw & 2) && !strcasecmp(argv[4], "-i")) {
+        if ((auth_pw & 2) && !strcasecmp(argv[5], "-i")) {
             auth_pw = 2;
         }
-        if ((auth_pw & 4) && !strcasecmp(argv[4], "-k")) {
+        if ((auth_pw & 4) && !strcasecmp(argv[5], "-k")) {
             auth_pw = 4;
         }
     }
