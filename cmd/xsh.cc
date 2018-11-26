@@ -6,6 +6,7 @@
 
 #include "common/options.h"
 #include "common/config.h"
+#include "common/ssh2_client.h"
 
 int main(int argc, char **argv) {
     common::Options options;
@@ -14,21 +15,27 @@ int main(int argc, char **argv) {
     if (options.log_file.empty() == false) {
         xlib::Log::Instance().SetLogFile(options.log_file);
     }
-    if (options.log_level != 0) {
+    if (options.log_level > 0) {
         xlib::Log::Instance().SetLogPriority(xlib::LOG_PRIORITY(options.log_level));
     }
-    XINF("xsh 1.0")
+    XDBG("xsh 1.0")
+    XDBG("cmd %v, group %v, tag %v, index %v, params %v",
+        options.cmd, options.group, options.tag, options.index, options.params)
 
     common::Config config;
-    config.Init("../conf/example.conf");
-    common::Host host;
-    int index = 1;
-    config.GetHost("a", index, &host);
-    XINF("get a-%v, %v ,tag num %v", index, host.alias, host.tags.size());
+    config.Init(options.config_file);
 
-    std::string tag("tag1");
-    std::vector<common::Host> hosts;
-    config.GetHostsByTag(tag, &hosts);
-    XINF("get %v, num %v", tag, hosts.size());
+    if (options.cmd == "r") {
+        std::vector<common::Host> hosts;
+        config.GetHostsByOptions(options, &hosts);
+        for (int i = 0; i < hosts.size(); i++) {
+            common::Host& host = hosts[i];
+            common::SSH2Client client(
+                host.user, host.password, host.ip, host.port, host.alias);
+            client.Open();
+            client.Run(options.params);
+        }
+    }
+
     return 0;
 }

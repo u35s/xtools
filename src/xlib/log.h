@@ -5,6 +5,7 @@
 #ifndef XLIB_LOG_H_
 #define XLIB_LOG_H_
 
+#include <stdlib.h>
 #include <string>
 #include <sstream>
 #include "xlib/time.h"
@@ -52,18 +53,22 @@ namespace xlib {
 #define ARRAYSIZE(a) (sizeof(a) / sizeof(*(a)))
 
 #if __cplusplus >= 201103L
-#define XTRACE(fmt, ...) xlib::Log::Instance().SWrite(xlib::LOG_PRIORITY_TRACE, __FILE__, __LINE__, __FUNCTION__, fmt, ##__VA_ARGS__);  // NOLINT
-#define XDBG(fmt, ...)   xlib::Log::Instance().SWrite(xlib::LOG_PRIORITY_DEBUG, __FILE__, __LINE__, __FUNCTION__, fmt, ##__VA_ARGS__);  // NOLINT
-#define XINF(fmt, ...)   xlib::Log::Instance().SWrite(xlib::LOG_PRIORITY_INFO,  __FILE__, __LINE__, __FUNCTION__, fmt, ##__VA_ARGS__);  // NOLINT
-#define XERR(fmt, ...)   xlib::Log::Instance().SWrite(xlib::LOG_PRIORITY_ERROR, __FILE__, __LINE__, __FUNCTION__, fmt, ##__VA_ARGS__);  // NOLINT
-#define XFATAL(fmt, ...) xlib::Log::Instance().SWrite(xlib::LOG_PRIORITY_FATAL, __FILE__, __LINE__, __FUNCTION__, fmt, ##__VA_ARGS__);  // NOLINT
+#define XLOG(fmt, ...)   xlib::Log::Instance().SWrite(xlib::LOG_PRIORITY_INFO,  __FILE__, __LINE__, __FUNCTION__, false, fmt, ##__VA_ARGS__);  // NOLINT
+#define XTRACE(fmt, ...) xlib::Log::Instance().SWrite(xlib::LOG_PRIORITY_TRACE, __FILE__, __LINE__, __FUNCTION__, true, fmt,  ##__VA_ARGS__);  // NOLINT
+#define XDBG(fmt, ...)   xlib::Log::Instance().SWrite(xlib::LOG_PRIORITY_DEBUG, __FILE__, __LINE__, __FUNCTION__, true, fmt,  ##__VA_ARGS__);  // NOLINT
+#define XINF(fmt, ...)   xlib::Log::Instance().SWrite(xlib::LOG_PRIORITY_INFO,  __FILE__, __LINE__, __FUNCTION__, true, fmt,  ##__VA_ARGS__);  // NOLINT
+#define XERR(fmt, ...)   xlib::Log::Instance().SWrite(xlib::LOG_PRIORITY_ERROR, __FILE__, __LINE__, __FUNCTION__, true, fmt,  ##__VA_ARGS__);  // NOLINT
+#define XFATAL(fmt, ...) xlib::Log::Instance().SWrite(xlib::LOG_PRIORITY_FATAL, __FILE__, __LINE__, __FUNCTION__, true, fmt,  ##__VA_ARGS__); exit(1);  // NOLINT
+#define IF_XFATAL(condition, fmt, ...) if (condition) { XFATAL(fmt, ##__VA_ARGS__); }
 #endif
 
-#define TRACE(fmt, ...) xlib::Log::Instance().Write(xlib::LOG_PRIORITY_TRACE, __FILE__, __LINE__, __FUNCTION__, fmt, ##__VA_ARGS__);  // NOLINT
-#define DBG(fmt, ...)   xlib::Log::Instance().Write(xlib::LOG_PRIORITY_DEBUG, __FILE__, __LINE__, __FUNCTION__, fmt, ##__VA_ARGS__);  // NOLINT
-#define INF(fmt, ...)   xlib::Log::Instance().Write(xlib::LOG_PRIORITY_INFO,  __FILE__, __LINE__, __FUNCTION__, fmt, ##__VA_ARGS__);  // NOLINT
-#define ERR(fmt, ...)   xlib::Log::Instance().Write(xlib::LOG_PRIORITY_ERROR, __FILE__, __LINE__, __FUNCTION__, fmt, ##__VA_ARGS__);  // NOLINT
-#define FATAL(fmt, ...) xlib::Log::Instance().Write(xlib::LOG_PRIORITY_FATAL, __FILE__, __LINE__, __FUNCTION__, fmt, ##__VA_ARGS__);  // NOLINT
+#define LOG(fmt, ...)   xlib::Log::Instance().Write(xlib::LOG_PRIORITY_INFO,  __FILE__, __LINE__, __FUNCTION__, false, fmt, ##__VA_ARGS__);  // NOLINT
+#define TRACE(fmt, ...) xlib::Log::Instance().Write(xlib::LOG_PRIORITY_TRACE, __FILE__, __LINE__, __FUNCTION__, true,  fmt, ##__VA_ARGS__);  // NOLINT
+#define DBG(fmt, ...)   xlib::Log::Instance().Write(xlib::LOG_PRIORITY_DEBUG, __FILE__, __LINE__, __FUNCTION__, true,  fmt, ##__VA_ARGS__);  // NOLINT
+#define INF(fmt, ...)   xlib::Log::Instance().Write(xlib::LOG_PRIORITY_INFO,  __FILE__, __LINE__, __FUNCTION__, true,  fmt, ##__VA_ARGS__);  // NOLINT
+#define ERR(fmt, ...)   xlib::Log::Instance().Write(xlib::LOG_PRIORITY_ERROR, __FILE__, __LINE__, __FUNCTION__, true,  fmt, ##__VA_ARGS__);  // NOLINT
+#define FATAL(fmt, ...) xlib::Log::Instance().Write(xlib::LOG_PRIORITY_FATAL, __FILE__, __LINE__, __FUNCTION__, true,  fmt, ##__VA_ARGS__); exit(1); // NOLINT
+#define IF_FATAL(condition, fmt, ...) if (condition) { FATAL(fmt, ##__VA_ARGS__); }
 
 typedef enum {
     LOG_PRIORITY_NULL = 0,
@@ -89,10 +94,10 @@ class Log {
 #if __cplusplus >= 201103L
     template <typename ...Args>
     void SWrite(LOG_PRIORITY pri, const char* file, uint32_t line, const char* function,
-        const std::string& format, const Args&... args) {
+        bool br, const std::string& format, const Args&... args) {
         std::string temp(format);
         Format(&temp, args...);
-        Write(pri, file, line, function, temp.c_str());
+        Write(pri, file, line, function, br, temp.c_str());
     }
 
     void Format(std::string* format) {}
@@ -111,7 +116,7 @@ class Log {
 #endif
 
     void Write(LOG_PRIORITY pri, const char* file, uint32_t line, const char* function,
-        const char* fmt, ...);
+        bool br, const char* fmt, ...);
 
     void SetLogPriority(LOG_PRIORITY pri);
     int  SetLogFile(std::string file);

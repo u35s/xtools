@@ -23,7 +23,7 @@ local 127.0.0.1 root pass 22 tag1|tag3
 # 使用
 
 ```
-" 远程登录
+" 远程登录 TODO
 
 ./xsh l(login)      列出所有机器
 ./xsh l(login) a    列出a组下的机器
@@ -37,7 +37,7 @@ local 127.0.0.1 root pass 22 tag1|tag3
 ./xsh r(run) a-tag1 ls  在a组持有tag1的所有机器执行命令
 ./xsh r(run) a ls       在a组的所有机器执行命令
 
-" 远程拷贝
+" 远程拷贝 TODO
 ./xcp ./tmp/file    0:/tmp/     本地到远程0号机器
 ./xcp ./tmp/file    a-0:/tmp/   本地到远程a组下的0号机器
 ./xcp ./tmp/file    a:/tmp/     本地到远程a组下的所有机器

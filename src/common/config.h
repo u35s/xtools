@@ -27,9 +27,10 @@ class Config {
  public:
     Config()  {}
     ~Config() {}
-    int Init(std::string config_file);
-    int GetHost(std::string group, int index, Host* host);
-    int GetHostsByTag(std::string tag, std::vector<Host>* hosts);
+    int  Init(const std::string& config_file);
+    bool GetHost(const std::string& group, int index, Host* host);
+    int  GetHosts(const std::string& group, const std::string& tag, std::vector<Host>* hosts);
+    int  GetHostsByOptions(const Options& options, std::vector<Host>* hosts);
 
  private:
     std::vector< cxx::shared_ptr<Host> > m_hosts;

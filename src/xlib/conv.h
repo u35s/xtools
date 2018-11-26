@@ -13,6 +13,8 @@ int Atoi(const char* a);
 
 int Stoi(const std::string a);
 
+uint32_t Stou(const std::string a);
+
 }  // namespace xlib
 
 #endif  // XLIB_CONV_H_

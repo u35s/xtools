@@ -16,6 +16,8 @@ std::string& Ltrim(std::string& str); // NOLINT
 std::string& Rtrim(std::string& str); // NOLINT
 std::string& Trim(std::string& str);  // NOLINT
 
+bool IsNumber(const std::string& a);
+
 }  // namespace xlib
 
 

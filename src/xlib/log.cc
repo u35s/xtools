@@ -94,7 +94,7 @@ void Log::SetLogPriority(LOG_PRIORITY pri) {
 }
 
 void Log::Write(LOG_PRIORITY pri, const char* file, uint32_t line, const char* function,
-    const char* fmt, ...) {
+    bool br, const char* fmt, ...) {
     if (pri < m_log_priority) {
         return;
     }
@@ -106,7 +106,7 @@ void Log::Write(LOG_PRIORITY pri, const char* file, uint32_t line, const char* f
     if (pre_len < 0) {
         pre_len = 0;
     }
-    pre_len = 0;
+    if (!br) { pre_len = 0; }
     va_list ap;
     va_start(ap, fmt);
     int len = vsnprintf(buff + pre_len, ARRAYSIZE(buff) - pre_len, fmt, ap);
@@ -118,7 +118,7 @@ void Log::Write(LOG_PRIORITY pri, const char* file, uint32_t line, const char* f
     if (tail > (ARRAYSIZE(buff) - 2)) {
         tail = ARRAYSIZE(buff) - 2;
     }
-    buff[tail++] = '\n';
+    if (br) { buff[tail++] = '\n'; }
     buff[tail] = '\0';
     if (m_log_fd > -1) {
         write(m_log_fd, buff, tail);

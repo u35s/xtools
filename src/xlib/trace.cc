@@ -5,13 +5,13 @@
 #include <execinfo.h>
 #include <cxxabi.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
 #include <string>
 #include <iostream>
 #include <stack>
 #include <memory>
-#include <cstdlib>
 
 #include "xlib/trace.h"
 #include "xlib/log.h"

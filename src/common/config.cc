@@ -8,14 +8,15 @@
 #include "xlib/log.h"
 #include "xlib/string.h"
 #include "xlib/conv.h"
+#include "common/options.h"
 #include "common/config.h"
 
 namespace common {
 
-int Config::Init(std::string config_file) {
+int Config::Init(const std::string& config_file) {
     std::ifstream infile(config_file.data());
 
-    std::string group("default");
+    std::string group("");
     std::string s;
     while (getline(infile, s)) {
         xlib::Trim(s);
@@ -52,26 +53,48 @@ int Config::Init(std::string config_file) {
     infile.close();
 }
 
-int Config::GetHost(std::string group, int index, Host* host) {
+bool Config::GetHost(const std::string& group, int index, Host* host) {
     int num = 0;
     for (int i = 0; i < m_hosts.size(); i++) {
         if (m_hosts[i]->group == group) {
             if (num == index) {
                 *host = *m_hosts[i];
-                break;
+                return true;
             }
             num++;
         }
     }
+    return false;
 }
 
-int Config::GetHostsByTag(std::string tag, std::vector<Host>* hosts) {
+int Config::GetHosts(const std::string& group, const std::string& tag, std::vector<Host>* hosts) {
     int num = 0;
     for (int i = 0; i < m_hosts.size(); i++) {
-        std::vector<std::string>& v = m_hosts[i]->tags;
-        if (std::count(v.begin(), v.end(), tag) > 0) {
-            hosts->push_back(*m_hosts[i]);
+        if (m_hosts[i]->group == group) {
+            std::vector<std::string>& v = m_hosts[i]->tags;
+            if (tag.empty() || std::count(v.begin(), v.end(), tag) > 0) {
+                hosts->push_back(*m_hosts[i]);
+                num++;
+            }
         }
+    }
+    return num;
+}
+
+int Config::GetHostsByOptions(const Options& options, std::vector<Host>* hosts) {
+    switch (options.run_type) {
+    case RunType_index :
+    case RunType_group_index : {
+        Host host;
+        if (GetHost(options.group, options.index, &host)) {
+            hosts->push_back(host);
+        }
+        break;
+    }
+    case RunType_group :
+    case RunType_group_tag :
+        GetHosts(options.group, options.tag, hosts);
+        break;
     }
 }
 

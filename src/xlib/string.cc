@@ -52,4 +52,13 @@ std::string& Trim(std::string& str) { // NOLINT
     return Rtrim(Ltrim(str));
 }
 
+bool IsNumber(const std::string& a) {
+    for (int i = 0; i < a.size(); i++) {
+        if (!isdigit(a[i])) {
+            return false;
+        }
+    }
+    return a.size() > 0;
+}
+
 }  // namespace xlib

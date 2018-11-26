@@ -1,7 +1,5 @@
 include(CheckIncludeFiles)
 set(CMDS
-  ssh2
-  ssh2_exec
   xcp
   xsh)
 
@@ -21,8 +19,6 @@ check_include_files(sys/time.h HAVE_SYS_TIME_H)
 check_include_files(arpa/inet.h HAVE_ARPA_INET_H)
 check_include_files(netinet/in.h HAVE_NETINET_IN_H)
 check_include_files(winsock2.h HAVE_WINSOCK2_H)
-
-
 
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/libssh2_config_cmake.h.in
