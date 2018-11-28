@@ -52,6 +52,7 @@ int Buffer::ReadN(int n)  {
     if (Size() == 0) {
        Reset();
     }
+    return m_read_pos;
 }
 
 }  // namespace xlib

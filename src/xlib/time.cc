@@ -33,7 +33,7 @@ std::string Time::String() {
     p_tm_now = localtime_r(&now, &tm_now);
 
     char buff[256] = {0};
-    snprintf(buff, sizeof(buff), "%04d-%02d-%02d% 02d:%02d:%02d:%06lu",
+    snprintf(buff, sizeof(buff), "%04d-%02d-%02d% 02d:%02d:%02d:%06llu",
         1900 + p_tm_now->tm_year,
         p_tm_now->tm_mon + 1,
         p_tm_now->tm_mday,

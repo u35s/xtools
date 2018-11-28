@@ -51,6 +51,7 @@ int Config::Init(const std::string& config_file) {
     }
     XDBG("read host num %v ", m_hosts.size());
     infile.close();
+    return 0;
 }
 
 bool Config::GetHost(const std::string& group, int index, Host* host) {
@@ -96,6 +97,7 @@ int Config::GetHostsByOptions(const Options& options, std::vector<Host>* hosts) 
         GetHosts(options.group, options.tag, hosts);
         break;
     }
+    return 0;
 }
 
 }  // namespace common
