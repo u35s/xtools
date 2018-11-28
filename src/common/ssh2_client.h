@@ -19,6 +19,8 @@ class SSH2Client {
     ~SSH2Client();
     void Open();
     void Run(std::string cmd);
+    void Copy(std::string local_path, std::string remote_path);
+    void Send(std::string local_path, std::string remote_path);
     void Shutdown();
 
  private:

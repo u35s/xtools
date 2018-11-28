@@ -4,12 +4,31 @@
 
 #include "xlib/log.h"
 
+#include "xlib/conv.h"
+#include "xlib/string.h"
 #include "common/options.h"
 #include "common/config.h"
 #include "common/ssh2_client.h"
 
+struct XshOptions : public common::Options {
+    void Init(int argc, char **argv) {
+        common::Options::Init(argc, argv);
+        if (opt_cur < argc) { cmd = argv[opt_cur]; opt_cur++; }
+        if (opt_cur < argc) {
+            std::string hosts = argv[opt_cur];
+            common::Options::ParseHosts(hosts);
+            opt_cur++;
+        }
+        while (opt_cur < argc) {
+            params.append(argv[opt_cur]);
+            params.append(" ");
+            opt_cur++;
+        }
+    }
+};
+
 int main(int argc, char **argv) {
-    common::Options options;
+    XshOptions options;
     options.Init(argc, argv);
 
     if (options.log_file.empty() == false) {

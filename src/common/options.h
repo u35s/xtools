@@ -20,6 +20,7 @@ enum RunType {
 struct Options {
     Options();
 
+    void ParseHosts(const std::string& s);
     void Init(int argc, char **argv);
 
     std::string  cmd;
@@ -33,6 +34,8 @@ struct Options {
     std::string  log_file;
 
     std::string  config_file;
+
+    int opt_cur;
 };
 
 }  // namespace common

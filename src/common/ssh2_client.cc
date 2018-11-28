@@ -16,6 +16,7 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <string>
+#include <fstream>
 #include "libssh2.h" // NOLINT
 #include "xlib/conv.h"
 #include "xlib/log.h"
@@ -89,54 +90,9 @@ void SSH2Client::Open() {
            LIBSSH2_ERROR_EAGAIN) {}
     IF_XFATAL(rc, "Failure establishing SSH session: %v", rc);
 
-    LIBSSH2_KNOWNHOSTS *nh;
-    nh = libssh2_knownhost_init(session);
-    IF_XFATAL(!nh, "eeek, do cleanup here");
-
-    /* read all hosts from here */
-    libssh2_knownhost_readfile(nh, "known_hosts",
-                               LIBSSH2_KNOWNHOST_FILE_OPENSSH);
-
-    /* store all known hosts to here */
-    libssh2_knownhost_writefile(nh, "dumpfile",
-                                LIBSSH2_KNOWNHOST_FILE_OPENSSH);
-
-    const char *fingerprint;
-    size_t len;
-    int type;
-    fingerprint = libssh2_session_hostkey(session, &len, &type);
-    if (fingerprint) {
-        struct libssh2_knownhost *host;
-        int check = libssh2_knownhost_checkp(nh, m_ip.c_str(), m_port,
-                                             fingerprint, len,
-                                             LIBSSH2_KNOWNHOST_TYPE_PLAIN|
-                                             LIBSSH2_KNOWNHOST_KEYENC_RAW,
-                                             &host);
-
-        XDBG("Host check: %v, key: %v", check,
-                (check <= LIBSSH2_KNOWNHOST_CHECK_MISMATCH)?
-                host->key:"<none>");
-
-        /*****
-         * At this point, we could verify that 'check' tells us the key is
-         * fine or bail out.
-         *****/
-    } else {
-        XFATAL("eeek, do cleanup here");
-    }
-    libssh2_knownhost_free(nh);
-
     while ((rc = libssh2_userauth_password(session, m_user.c_str(), m_password.c_str())) ==
            LIBSSH2_ERROR_EAGAIN) {}
     IF_XFATAL(rc, "Authentication by password failed.");
-
-    /* Exec non-blocking on the remove host */
-    while ( (channel = libssh2_channel_open_session(session)) == NULL &&
-           libssh2_session_last_error(session, NULL, NULL, 0) ==
-           LIBSSH2_ERROR_EAGAIN ) {
-        waitsocket(sock, session);
-    }
-    IF_XFATAL(channel == NULL, "channel null");
 }
 
 void SSH2Client::Shutdown() {
@@ -148,6 +104,7 @@ void SSH2Client::Shutdown() {
         libssh2_session_disconnect(session,
                                    "Normal Shutdown, Thank you for playing");
         libssh2_session_free(session);
+        session = NULL;
     }
     if (sock > 0) {
         close(sock);
@@ -156,8 +113,141 @@ void SSH2Client::Shutdown() {
     XDBG("all done");
 }
 
+void SSH2Client::Send(std::string local_path, std::string remote_path) {
+    FILE *local;
+    struct stat fileinfo;
+    local = fopen(local_path.c_str(), "rb");
+    IF_XFATAL(!local, "Can't local file %v", local_path);
+    stat(local_path.c_str(), &fileinfo);
+
+    /* Send a file via scp. The mode parameter must only have permissions! */
+    do {
+        channel = libssh2_scp_send(session, remote_path.c_str(), fileinfo.st_mode & 0777,
+                                   (unsigned long)fileinfo.st_size);
+
+        if ((!channel) && (libssh2_session_last_errno(session) !=
+                           LIBSSH2_ERROR_EAGAIN)) {
+            char *err_msg;
+
+            libssh2_session_last_error(session, &err_msg, NULL, 0);
+            XFATAL("%v", err_msg);
+        }
+    } while (!channel);
+
+    XDBG("%v", "SCP session waiting to send file");
+    char mem[1024*100];
+    char *ptr;
+    long total = 0;
+    size_t prev;
+    size_t nread;
+    do {
+        nread = fread(mem, 1, sizeof(mem), local);
+        if (nread <= 0) {
+            /* end of file */
+            break;
+        }
+        ptr = mem;
+
+        total += nread;
+
+        prev = 0;
+        do {
+            while ((rc = libssh2_channel_write(channel, ptr, nread)) ==
+                   LIBSSH2_ERROR_EAGAIN) {
+                waitsocket(sock, session);
+                prev = 0;
+            }
+            if (rc < 0) {
+                XERR("ERROR %v total %lv / %v prev %v", rc,
+                        total, (int)nread, (int)prev);
+                break;
+            }
+            else {
+                prev = nread;
+
+                /* rc indicates how many bytes were written this time */
+                nread -= rc;
+                ptr += rc;
+            }
+        } while (nread);
+    } while (!nread); /* only continue if nread was drained */
+    XDBG("%v bytes ", total);
+
+    XDBG("Sending EOF");
+    while (libssh2_channel_send_eof(channel) == LIBSSH2_ERROR_EAGAIN);
+
+    XDBG("Waiting for EOF");
+    while (libssh2_channel_wait_eof(channel) == LIBSSH2_ERROR_EAGAIN);
+
+    XDBG("Waiting for channel to close");
+    while (libssh2_channel_wait_closed(channel) == LIBSSH2_ERROR_EAGAIN);
+}
+
+void SSH2Client::Copy(std::string local_path, std::string remote_path) {
+    XDBG("libssh2_scp_recv2()");
+    libssh2_struct_stat fileinfo;
+    do {
+        channel = libssh2_scp_recv2(session, remote_path.c_str(), &fileinfo);
+        if (!channel) {
+            if (libssh2_session_last_errno(session) != LIBSSH2_ERROR_EAGAIN) {
+                char *err_msg;
+                libssh2_session_last_error(session, &err_msg, NULL, 0);
+                XFATAL("%v", err_msg);
+            } else {
+                XDBG("libssh2_scp_recv() spin");
+                waitsocket(sock, session);
+            }
+        }
+    } while (!channel);
+    XDBG("libssh2_scp_recv() is done, now receive data!");
+
+    int rc;
+    int spin = 0;
+    libssh2_struct_stat_size got = 0;
+    libssh2_struct_stat_size total = 0;
+    std::string copy_file = local_path + "-" + m_ip;
+    std::ofstream out(copy_file, std::ofstream::out);
+    IF_XFATAL(!out, "%v open fail", copy_file);
+    while (got < fileinfo.st_size) {
+        char mem[1024*24];
+        do {
+            int amount = sizeof(mem);
+
+            if ((fileinfo.st_size -got) < amount) {
+                amount = static_cast<int>(fileinfo.st_size - got);
+            }
+
+            /* loop until we block */
+            rc = libssh2_channel_read(channel, mem, amount);
+            if (rc > 0) {
+                out.write(mem, rc);
+                got += rc;
+                total += rc;
+            }
+        } while (rc > 0);
+
+        if ((rc == LIBSSH2_ERROR_EAGAIN) && (got < fileinfo.st_size)) {
+            /* this is due to blocking that would occur otherwise
+            so we loop on this condition */
+
+            spin++;
+            waitsocket(sock, session); /* now we wait */
+            continue;
+        }
+        break;
+    }
+}
+
 void SSH2Client::Run(std::string cmd) {
     XLOG("[%v@%v:%v %v] %v\n", m_user,  m_ip, m_port, m_alias, cmd);
+    /* Exec non-blocking on the remove host */
+    while ( (channel = libssh2_channel_open_session(session)) == NULL &&
+           libssh2_session_last_error(session, NULL, NULL, 0) ==
+           LIBSSH2_ERROR_EAGAIN ) {
+        waitsocket(sock, session);
+    }
+    IF_XFATAL(channel == NULL, "channel null");
+
     while ( (rc = libssh2_channel_exec(channel, cmd.c_str())) ==
           LIBSSH2_ERROR_EAGAIN ) {
         waitsocket(sock, session);

@@ -17,6 +17,29 @@ Options::Options() : index(-1), log_level(-1) {
     config_file = "/etc/xtools.conf";
 }
 
+void Options::ParseHosts(const std::string& s) {
+    std::vector<std::string> vec;
+    xlib::Split(s, "-", &vec);
+    if (vec.size() == 2) {
+        group  = vec[0];
+        if (xlib::IsNumber(vec[1])) {
+            run_type = common::RunType_group_index;
+            index = xlib::Stou(vec[1]);
+        } else {
+            tag = vec[1];
+            run_type = common::RunType_group_tag;
+        }
+    } else if (vec.size() == 1) {
+        if (xlib::IsNumber(vec[0])) {
+            index = xlib::Stou(vec[0]);
+            run_type = common::RunType_index;
+        } else {
+            group = vec[0];
+            run_type = common::RunType_group;
+        }
+    }
+}
+
 void Options::Init(int argc, char **argv) {
     int opt  = 0;
     while ( -1 != (opt = getopt(argc, argv, "l:f:c:")) ) {
@@ -33,37 +56,7 @@ void Options::Init(int argc, char **argv) {
         }
     }
     XDBG("optind %v", optind);
-    int cur = optind;
-    if (cur < argc) { cmd = argv[cur]; cur++; }
-    if (cur < argc) {
-        std::vector<std::string> vec;
-        xlib::Split(argv[cur], "-", &vec);
-        std::string option;
-        if (vec.size() == 2) {
-            group  = vec[0];
-            if (xlib::IsNumber(vec[1])) {
-                run_type = RunType_group_index;
-                index = xlib::Stou(vec[1]);
-            } else {
-                tag = vec[1];
-                run_type = RunType_group_tag;
-            }
-        } else {
-            if (xlib::IsNumber(vec[0])) {
-                index = xlib::Stou(vec[0]);
-                run_type = RunType_index;
-            } else {
-                group = vec[0];
-                run_type = RunType_group;
-            }
-        }
-        cur++;
-    }
-    while (cur < argc) {
-        params.append(argv[cur]);
-        params.append(" ");
-        cur++;
-    }
+    opt_cur = optind;
 }
 
 }  // namespace common
