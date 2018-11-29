@@ -20,7 +20,7 @@ struct XcpOptions : public common::Options {
     void Init(int argc, char **argv) {
         common::Options::Init(argc, argv);
         int pre = opt_cur;
-        while (opt_cur < argc && (pre + 2) > opt_cur ) {
+        while ( opt_cur < argc && (pre + 2)>opt_cur ) {
             std::vector<std::string> vec;
             xlib::Split(argv[opt_cur], ":", &vec);
             if (vec.size() == 2) {

@@ -46,20 +46,15 @@ int main(int argc, char **argv) {
 
     std::vector<common::Host> hosts;
     config.GetHostsByOptions(options, &hosts);
-    if (options.cmd == "l") {
-        for (int i = 0; i < hosts.size(); i++) {
-            common::Host& host = hosts[i];
-            common::SSH2Client client(
-                host.user, host.password, host.ip, host.port, host.alias);
+
+    for (int i = 0; i < hosts.size(); i++) {
+        common::Host& host = hosts[i];
+        common::SSH2Client client(
+            host.user, host.password, host.ip, host.port, host.alias);
+        if (options.cmd == "l") {
             client.Open(false);
             client.Login();
-        }
-    }
-    if (options.cmd == "r") {
-        for (int i = 0; i < hosts.size(); i++) {
-            common::Host& host = hosts[i];
-            common::SSH2Client client(
-                host.user, host.password, host.ip, host.port, host.alias);
+        } else if (options.cmd == "r") {
             client.Open();
             client.Run(options.params);
         }

@@ -126,7 +126,7 @@ void SSH2Client::Send(std::string local_path, std::string remote_path) {
     /* Send a file via scp. The mode parameter must only have permissions! */
     do {
         channel = libssh2_scp_send(session, remote_path.c_str(), fileinfo.st_mode & 0777,
-                                   (unsigned long)fileinfo.st_size);
+                                   (uint32_t)fileinfo.st_size);
 
         if ((!channel) && (libssh2_session_last_errno(session) !=
                            LIBSSH2_ERROR_EAGAIN)) {
@@ -140,7 +140,7 @@ void SSH2Client::Send(std::string local_path, std::string remote_path) {
     XDBG("%v", "SCP session waiting to send file");
     char mem[1024*100];
     char *ptr;
-    long total = 0;
+    int32_t total = 0;
     size_t prev;
     size_t nread;
     do {
@@ -164,8 +164,7 @@ void SSH2Client::Send(std::string local_path, std::string remote_path) {
                 XERR("ERROR %v total %lv / %v prev %v", rc,
                         total, (int)nread, (int)prev);
                 break;
-            }
-            else {
+            } else {
                 prev = nread;
 
                 /* rc indicates how many bytes were written this time */
@@ -177,13 +176,13 @@ void SSH2Client::Send(std::string local_path, std::string remote_path) {
     XDBG("%v bytes ", total);
 
     XDBG("Sending EOF");
-    while (libssh2_channel_send_eof(channel) == LIBSSH2_ERROR_EAGAIN);
+    while (libssh2_channel_send_eof(channel) == LIBSSH2_ERROR_EAGAIN) {}
 
     XDBG("Waiting for EOF");
-    while (libssh2_channel_wait_eof(channel) == LIBSSH2_ERROR_EAGAIN);
+    while (libssh2_channel_wait_eof(channel) == LIBSSH2_ERROR_EAGAIN) {}
 
     XDBG("Waiting for channel to close");
-    while (libssh2_channel_wait_closed(channel) == LIBSSH2_ERROR_EAGAIN);
+    while (libssh2_channel_wait_closed(channel) == LIBSSH2_ERROR_EAGAIN) {}
 }
 
 void SSH2Client::Copy(std::string local_path, std::string remote_path) {
@@ -331,7 +330,7 @@ void SSH2Client::Login() {
     LIBSSH2_POLLFD* fds = &fdp;
     fds[0].type = LIBSSH2_POLLFD_CHANNEL;
     fds[0].fd.channel = channel;
-    fds[0].events = LIBSSH2_POLLFD_POLLIN ;
+    fds[0].events = LIBSSH2_POLLFD_POLLIN;
 
     char buffer[32000];
 
@@ -343,18 +342,17 @@ void SSH2Client::Login() {
 
     while (1) {
         FD_ZERO(&set);
-        FD_SET(fileno(stdin),&set);
+        FD_SET(fileno(stdin), &set);
 
         rc = select(fileno(stdin)+1, &set, NULL, NULL, &timeval_out);
         if (rc > 0) {
             rc = read(fileno(stdin), buffer, sizeof(buffer));
             if (rc > 0) {
                 int ret;
-                while (ret = libssh2_channel_write(channel,buffer, rc) == LIBSSH2_ERROR_EAGAIN);
-            } 
+                while (ret = libssh2_channel_write(channel, buffer, rc) == LIBSSH2_ERROR_EAGAIN) {}
+            }
         }
-                
-        rc = (libssh2_poll(fds, 1, 0));
+        rc = libssh2_poll(fds, 1, 0);
         if (rc < 1)
             continue;
 
@@ -368,7 +366,7 @@ void SSH2Client::Login() {
             fprintf(stdout, "%s\n", "closed");
             break;
         }
-    };
+    }
 }
 
 }  // namespace common
