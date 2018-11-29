@@ -17,7 +17,8 @@ class SSH2Client {
     SSH2Client(std::string user, std::string password,
         std::string ip, uint16_t port, std::string alias);
     ~SSH2Client();
-    void Open();
+    void Open(bool noblock = true);
+    void Login();
     void Run(std::string cmd);
     void Copy(std::string local_path, std::string remote_path);
     void Send(std::string local_path, std::string remote_path);

@@ -9,6 +9,7 @@
 #include <arpa/inet.h>
 #include <sys/time.h>
 #include <sys/types.h>
+#include <sys/ioctl.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <fcntl.h>
@@ -62,7 +63,7 @@ static int waitsocket(int socket_fd, LIBSSH2_SESSION *session) {
     return rc;
 }
 
-void SSH2Client::Open() {
+void SSH2Client::Open(bool noblock) {
     rc = libssh2_init(0);
     IF_XFATAL(rc != 0, "libssh2 initialization failed (%v)", rc);
 
@@ -81,7 +82,9 @@ void SSH2Client::Open() {
     IF_XFATAL(!session, "session init error");
 
     /* tell libssh2 we want it all done non-blocking */
-    libssh2_session_set_blocking(session, 0);
+    if (noblock) {
+        libssh2_session_set_blocking(session, 0);
+    }
 
     /* ... start it up. This will trade welcome banners, exchange keys,
      * and setup crypto, compression, and MAC layers
@@ -290,6 +293,82 @@ void SSH2Client::Run(std::string cmd) {
     } else {
         XDBG("exit: %v bytecount: %v\n", exitcode, bytecount);
     }
+}
+
+void SSH2Client::Login() {
+    XLOG("[%v@%v:%v %v]\n", m_user,  m_ip, m_port, m_alias);
+    /* Exec non-blocking on the remove host */
+    while ( (channel = libssh2_channel_open_session(session)) == NULL &&
+           libssh2_session_last_error(session, NULL, NULL, 0) ==
+           LIBSSH2_ERROR_EAGAIN ) {
+        waitsocket(sock, session);
+    }
+    IF_XFATAL(channel == NULL, "channel null");
+
+    /* Request a terminal with 'vanilla' terminal emulation
+     * See /etc/termcap for more options
+     */
+    IF_XFATAL(libssh2_channel_request_pty(channel, "xterm"), "request pty fail");
+
+    /* Open a SHELL on that pty */
+    IF_XFATAL(libssh2_channel_shell(channel), "open shell fail");
+
+    struct winsize w_size;
+    struct winsize w_size_bck;
+    memset(&w_size, 0, sizeof(struct winsize));
+    memset(&w_size_bck, 0, sizeof(struct winsize));
+    ioctl(fileno(stdin), TIOCGWINSZ, &w_size);
+    if ((w_size.ws_row != w_size_bck.ws_row) ||
+        (w_size.ws_col != w_size_bck.ws_col))   {
+        w_size_bck = w_size;
+
+        libssh2_channel_request_pty_size(channel,
+                                         w_size.ws_col,
+                                         w_size.ws_row);
+    }
+
+    LIBSSH2_POLLFD fdp;
+    LIBSSH2_POLLFD* fds = &fdp;
+    fds[0].type = LIBSSH2_POLLFD_CHANNEL;
+    fds[0].fd.channel = channel;
+    fds[0].events = LIBSSH2_POLLFD_POLLIN ;
+
+    char buffer[32000];
+
+    struct timeval timeval_out;
+    timeval_out.tv_sec = 1;
+    timeval_out.tv_usec = 0;
+
+    fd_set set;
+
+    while (1) {
+        FD_ZERO(&set);
+        FD_SET(fileno(stdin),&set);
+
+        rc = select(fileno(stdin)+1, &set, NULL, NULL, &timeval_out);
+        if (rc > 0) {
+            rc = read(fileno(stdin), buffer, sizeof(buffer));
+            if (rc > 0) {
+                int ret;
+                while (ret = libssh2_channel_write(channel,buffer, rc) == LIBSSH2_ERROR_EAGAIN);
+            } 
+        }
+                
+        rc = (libssh2_poll(fds, 1, 0));
+        if (rc < 1)
+            continue;
+
+        if (fds[0].revents & LIBSSH2_POLLFD_POLLIN) {
+            int n = libssh2_channel_read(channel, buffer, sizeof(buffer));
+            write(1, buffer, n);
+            fflush(stdout);
+        }
+
+        if (fds[0].revents & LIBSSH2_POLLFD_CHANNEL_CLOSED) {
+            fprintf(stdout, "%s\n", "closed");
+            break;
+        }
+    };
 }
 
 }  // namespace common

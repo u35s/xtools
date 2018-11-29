@@ -23,7 +23,7 @@ local 127.0.0.1 root pass 22 tag1|tag3
 # 使用
 
 ```
-" 远程登录 TODO
+" 远程登录
 
 ./xsh l(login)      列出所有机器
 ./xsh l(login) a    列出a组下的机器

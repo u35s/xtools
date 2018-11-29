@@ -44,9 +44,18 @@ int main(int argc, char **argv) {
     common::Config config;
     config.Init(options.config_file);
 
+    std::vector<common::Host> hosts;
+    config.GetHostsByOptions(options, &hosts);
+    if (options.cmd == "l") {
+        for (int i = 0; i < hosts.size(); i++) {
+            common::Host& host = hosts[i];
+            common::SSH2Client client(
+                host.user, host.password, host.ip, host.port, host.alias);
+            client.Open(false);
+            client.Login();
+        }
+    }
     if (options.cmd == "r") {
-        std::vector<common::Host> hosts;
-        config.GetHostsByOptions(options, &hosts);
         for (int i = 0; i < hosts.size(); i++) {
             common::Host& host = hosts[i];
             common::SSH2Client client(
