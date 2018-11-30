@@ -2,6 +2,7 @@
  * Copyright [2018] <Copyright u35s>
  */
 
+#include <algorithm>
 #include "xlib/log.h"
 
 #include "xlib/conv.h"
@@ -66,11 +67,11 @@ int main(int argc, char **argv) {
                     xlib::Color(host.ip, "", 15),
                     xlib::Color(indexs, "green", 3),
                     xlib::Color(host.alias, "red", 15));
-                if (i!=0 && (i+1)%3==0) {
-                    XLOG("\n"); 
+                if (i != 0 && (i+1)%3 == 0) {
+                    XLOG("\n");
                 }
             }
-            XLOG("\n\n"); 
+            XLOG("\n\n");
         }
         return 0;
     }

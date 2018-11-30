@@ -62,10 +62,10 @@ bool IsNumber(const std::string& a) {
     return a.size() > 0;
 }
 
-std::string& Color(std::string& str,
+std::string& Color(std::string& str,      // NOLINT
     const std::string color, int width) { // NOLINT
     char s[300] = {0};
-    sprintf(s, "%-*s", width, str.c_str());
+    snprintf(s, sizeof(s), "%-*s", width, str.c_str());
     str = s;
     if (color == "red") {
         str.insert(0, "\x1b[31m");

@@ -16,9 +16,9 @@
 #include <errno.h>
 #include <stdio.h>
 #include <ctype.h>
+#include <termios.h>
 #include <string>
 #include <fstream>
-#include <termios.h>
 #include "libssh2.h" // NOLINT
 #include "xlib/conv.h"
 #include "xlib/log.h"

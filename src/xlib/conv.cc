@@ -10,7 +10,7 @@
 
 namespace xlib {
 
-char* Itoa(int num, int width, char* a) { sprintf(a, "% *d", width, num); return a; }
+char* Itoa(int num, int width, char* a) { snprintf(a, sizeof(a), "% *d", width, num); return a; }
 
 int Atoi(const char* a) { return std::atoi(a); }
 
