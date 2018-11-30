@@ -14,8 +14,8 @@ struct XcpOptions : public common::Options {
     std::string remote_path;
     std::string local_path;
 
-    bool remote_to_local;
-    bool local_to_remote;
+    bool remote_to_local = false;
+    bool local_to_remote = false;
 
     void Init(int argc, char **argv) {
         common::Options::Init(argc, argv);
@@ -24,7 +24,7 @@ struct XcpOptions : public common::Options {
             std::vector<std::string> vec;
             xlib::Split(argv[opt_cur], ":", &vec);
             if (vec.size() == 2) {
-                pre == opt_cur ? remote_to_local = true : local_to_remote = true;
+                (pre == opt_cur) ? remote_to_local = true : local_to_remote = true;
                 common::Options::ParseHosts(vec[0]);
                 remote_path = vec[1];
             } else {
