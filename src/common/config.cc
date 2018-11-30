@@ -33,7 +33,7 @@ int Config::Init(const std::string& config_file) {
         }
         std::vector<std::string> vec;
         xlib::Split(s, " ",  &vec);
-        if (vec.size() == 6) {
+        if (vec.size() >= 5) {
             cxx::shared_ptr<Host> host(new Host);
             host->alias = vec[0];
             host->ip    = vec[1];
@@ -42,7 +42,9 @@ int Config::Init(const std::string& config_file) {
             host->port     = static_cast<uint32_t>(xlib::Stoi(vec[4]));
 
             std::vector<std::string> tags;
-            xlib::Split(vec[5], "|", &tags);
+            if (vec.size() >= 6) {
+                xlib::Split(vec[5], "|", &tags);
+            }
             host->tags = tags;
             host->group = group;
             m_hosts.push_back(host);
