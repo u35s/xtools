@@ -3,11 +3,14 @@
  */
 
 #include <ctype.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 #include "xlib/conv.h"
 
 namespace xlib {
+
+char* Itoa(int num, int width, char* a) { sprintf(a, "% *d", width, num); return a; }
 
 int Atoi(const char* a) { return std::atoi(a); }
 

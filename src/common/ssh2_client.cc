@@ -349,7 +349,7 @@ void SSH2Client::Login() {
             rc = read(fileno(stdin), buffer, sizeof(buffer));
             if (rc > 0) {
                 int ret;
-                while (ret = libssh2_channel_write(channel, buffer, rc) == LIBSSH2_ERROR_EAGAIN) {}
+                while ((ret = libssh2_channel_write(channel, buffer, rc)) == LIBSSH2_ERROR_EAGAIN) {}
             }
         }
         rc = libssh2_poll(fds, 1, 0);

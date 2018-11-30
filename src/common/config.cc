@@ -17,6 +17,7 @@ int Config::Init(const std::string& config_file) {
     std::ifstream infile(config_file.data());
 
     std::string group("");
+    m_group_names.push_back(group);
     std::string s;
     while (getline(infile, s)) {
         xlib::Trim(s);
@@ -26,6 +27,7 @@ int Config::Init(const std::string& config_file) {
 
         if (s.size() > 2 && s.find('[') == 0 && s.find(']') > 0) {
             group = s.substr(s.find('[')+1, s.find(']')-1);
+            m_group_names.push_back(group);
             XDBG("set group %v", group);
             continue;
         }
@@ -52,6 +54,10 @@ int Config::Init(const std::string& config_file) {
     XDBG("read host num %v ", m_hosts.size());
     infile.close();
     return 0;
+}
+
+const std::vector<std::string> Config::GetGroupNames() {
+    return m_group_names;
 }
 
 bool Config::GetHost(const std::string& group, int index, Host* host) {

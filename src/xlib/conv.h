@@ -9,6 +9,8 @@
 
 namespace xlib {
 
+char* Itoa(int num, int width, char* a);
+
 int Atoi(const char* a);
 
 int Stoi(const std::string a);

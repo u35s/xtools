@@ -44,9 +44,39 @@ int main(int argc, char **argv) {
     common::Config config;
     config.Init(options.config_file);
 
+    if (options.cmd != "l" && options.cmd != "r") {
+        const std::vector<std::string> vec = config.GetGroupNames();
+        auto it = std::find(vec.begin(), vec.end(), options.cmd);
+        bool one = (it != vec.end() && options.cmd != "");
+
+        for (int i = 0; i < vec.size(); i++) {
+            if (one && vec[i] != options.cmd) {
+                continue;
+            }
+            std::vector<common::Host> hosts;
+            std::string tag;
+            config.GetHosts(vec[i], tag, &hosts);
+
+            XLOG("[%v]\n", vec[i]);
+            for (int i = 0; i < hosts.size(); i++) {
+                common::Host& host = hosts[i];
+                char index[300] = {0};
+                std::string indexs(xlib::Itoa(i, 3, index));
+                XLOG("%v\t%v服\t%v\t",
+                    xlib::Color(host.ip, "", 15),
+                    xlib::Color(indexs, "green", 3),
+                    xlib::Color(host.alias, "red", 15));
+                if (i!=0 && (i+1)%3==0) {
+                    XLOG("\n"); 
+                }
+            }
+            XLOG("\n\n"); 
+        }
+        return 0;
+    }
+
     std::vector<common::Host> hosts;
     config.GetHostsByOptions(options, &hosts);
-
     for (int i = 0; i < hosts.size(); i++) {
         common::Host& host = hosts[i];
         common::SSH2Client client(
@@ -59,6 +89,5 @@ int main(int argc, char **argv) {
             client.Run(options.params);
         }
     }
-
     return 0;
 }

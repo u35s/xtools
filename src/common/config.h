@@ -31,9 +31,11 @@ class Config {
     bool GetHost(const std::string& group, int index, Host* host);
     int  GetHosts(const std::string& group, const std::string& tag, std::vector<Host>* hosts);
     int  GetHostsByOptions(const Options& options, std::vector<Host>* hosts);
+    const std::vector<std::string> GetGroupNames();
 
  private:
     std::vector< cxx::shared_ptr<Host> > m_hosts;
+    std::vector< std::string > m_group_names;
 };
 
 }  // namespace common

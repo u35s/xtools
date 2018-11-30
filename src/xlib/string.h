@@ -18,6 +18,9 @@ std::string& Trim(std::string& str);  // NOLINT
 
 bool IsNumber(const std::string& a);
 
+std::string& Color(std::string& str,
+    const std::string color, int width);
+
 }  // namespace xlib
 
 

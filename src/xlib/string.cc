@@ -62,4 +62,20 @@ bool IsNumber(const std::string& a) {
     return a.size() > 0;
 }
 
+std::string& Color(std::string& str,
+    const std::string color, int width) { // NOLINT
+    char s[300] = {0};
+    sprintf(s, "%-*s", width, str.c_str());
+    str = s;
+    if (color == "red") {
+        str.insert(0, "\x1b[31m");
+        str.append("\x1b[0m");
+    }
+    if (color == "green") {
+        str.insert(0, "\x1b[32m");
+        str.append("\x1b[0m");
+    }
+    return str;
+}
+
 }  // namespace xlib
