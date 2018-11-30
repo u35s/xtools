@@ -18,6 +18,7 @@
 #include <ctype.h>
 #include <string>
 #include <fstream>
+#include <termios.h>
 #include "libssh2.h" // NOLINT
 #include "xlib/conv.h"
 #include "xlib/log.h"
@@ -32,6 +33,30 @@ SSH2Client::SSH2Client(std::string user, std::string password,
 
 SSH2Client::~SSH2Client() {
     Shutdown();
+}
+
+int SSH2Client::RawMode() {
+    int rc;
+    struct termios tio;
+
+    rc = tcgetattr(fileno(stdin), &tio);
+    if (rc != -1) {
+        saved_tio = tio;
+        /* do the equivalent of cfmakeraw() manually, to build on Solaris */
+        tio.c_iflag &= ~(IGNBRK|BRKINT|PARMRK|ISTRIP|INLCR|IGNCR|ICRNL|IXON);
+        tio.c_oflag &= ~OPOST;
+        tio.c_lflag &= ~(ECHO|ECHONL|ICANON|ISIG|IEXTEN);
+        tio.c_cflag &= ~(CSIZE|PARENB);
+        tio.c_cflag |= CS8;
+        rc = tcsetattr(fileno(stdin), TCSADRAIN, &tio);
+    }
+    return rc;
+}
+
+int SSH2Client::NormalMode() {
+    int rc;
+    rc = tcsetattr(fileno(stdin), TCSADRAIN, &saved_tio);
+    return rc;
 }
 
 static int waitsocket(int socket_fd, LIBSSH2_SESSION *session) {
@@ -312,6 +337,10 @@ void SSH2Client::Login() {
     /* Open a SHELL on that pty */
     IF_XFATAL(libssh2_channel_shell(channel), "open shell fail");
 
+
+    rc = RawMode();
+    IF_XFATAL(rc != 0, "raw mode error");
+
     struct winsize w_size;
     struct winsize w_size_bck;
     memset(&w_size, 0, sizeof(struct winsize));
@@ -335,8 +364,8 @@ void SSH2Client::Login() {
     char buffer[32000];
 
     struct timeval timeval_out;
-    timeval_out.tv_sec = 1;
-    timeval_out.tv_usec = 0;
+    timeval_out.tv_sec = 0;
+    timeval_out.tv_usec = 50;
 
     fd_set set;
 
@@ -367,6 +396,7 @@ void SSH2Client::Login() {
             break;
         }
     }
+    NormalMode();
 }
 
 }  // namespace common

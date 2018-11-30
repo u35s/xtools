@@ -5,6 +5,7 @@
 #ifndef COMMON_SSH2_CLIENT_H_
 #define COMMON_SSH2_CLIENT_H_
 
+#include <termios.h>
 #include <stdint.h>
 #include <string>
 
@@ -25,6 +26,8 @@ class SSH2Client {
     void Shutdown();
 
  private:
+    int RawMode();
+    int NormalMode();
     std::string  m_user;
     std::string  m_password;
     std::string  m_ip;
@@ -35,6 +38,7 @@ class SSH2Client {
     int sock;
     LIBSSH2_SESSION *session;
     LIBSSH2_CHANNEL *channel;
+    struct termios  saved_tio;
 };
 
 }  // namespace common
