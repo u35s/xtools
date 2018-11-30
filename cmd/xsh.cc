@@ -61,8 +61,7 @@ int main(int argc, char **argv) {
             XLOG("[%v]\n", vec[i]);
             for (int i = 0; i < hosts.size(); i++) {
                 common::Host& host = hosts[i];
-                char index[300] = {0};
-                std::string indexs(xlib::Itoa(i, 3, index));
+                std::string indexs(std::to_string(i));
                 XLOG("%v\t%v服\t%v\t",
                     xlib::Color(host.ip, "", 15),
                     xlib::Color(indexs, "green", 3),
