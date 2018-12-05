@@ -18,6 +18,7 @@ class SSH2Client {
     SSH2Client(std::string user, std::string password,
         std::string ip, uint16_t port, std::string alias);
     ~SSH2Client();
+    void Exec(std::string cmd);
     void Open(bool noblock = true);
     void Login();
     void Run(std::string cmd);
@@ -36,8 +37,8 @@ class SSH2Client {
 
     int rc;
     int sock;
-    LIBSSH2_SESSION *session;
-    LIBSSH2_CHANNEL *channel;
+    LIBSSH2_SESSION *session = NULL;
+    LIBSSH2_CHANNEL *channel = NULL;
     struct termios  saved_tio;
 };
 

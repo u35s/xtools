@@ -5,6 +5,7 @@
 #include <sys/time.h>
 #include <time.h>
 #include <stdio.h>
+#define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 #include <string>
 

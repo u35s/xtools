@@ -45,7 +45,7 @@ int main(int argc, char **argv) {
     common::Config config;
     config.Init(options.config_file);
 
-    if (options.cmd != "l" && options.cmd != "r") {
+    if (options.cmd != "l" && options.cmd != "r" && options.cmd != "i") {
         const std::vector<std::string> vec = config.GetGroupNames();
         auto it = std::find(vec.begin(), vec.end(), options.cmd);
         bool one = (it != vec.end() && options.cmd != "");
@@ -87,6 +87,8 @@ int main(int argc, char **argv) {
         } else if (options.cmd == "r") {
             client.Open();
             client.Run(options.params);
+        } else if (options.cmd == "i") {
+            client.Exec(options.params);
         }
     }
     return 0;

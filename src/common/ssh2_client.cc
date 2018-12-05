@@ -53,6 +53,12 @@ int SSH2Client::RawMode() {
     return rc;
 }
 
+void SSH2Client::Exec(std::string cmd) {
+    std::stringstream ss;
+    ss <<  cmd << " " << m_ip << " " << m_port << " " << m_user << " " << m_password;
+    system(ss.str().c_str());
+}
+
 int SSH2Client::NormalMode() {
     int rc;
     rc = tcsetattr(fileno(stdin), TCSADRAIN, &saved_tio);
