@@ -397,7 +397,7 @@ void SSH2Client::Login() {
         }
 
         if (fds[0].revents & LIBSSH2_POLLFD_CHANNEL_CLOSED) {
-            //fprintf(stdout, "%s\n", "closed");
+            // fprintf(stdout, "%s\n", "closed");
             break;
         }
     }
