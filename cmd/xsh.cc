@@ -50,7 +50,7 @@ int main(int argc, char **argv) {
         auto it = std::find(vec.begin(), vec.end(), options.cmd);
         bool one = (it != vec.end() && options.cmd != "");
 
-        for (int i = 0; i < vec.size(); i++) {
+        for (size_t i = 0; i < vec.size(); i++) {
             if (one && vec[i] != options.cmd) {
                 continue;
             }
@@ -59,7 +59,7 @@ int main(int argc, char **argv) {
             config.GetHosts(vec[i], tag, &hosts);
 
             XLOG("[%v]\n", vec[i]);
-            for (int i = 0; i < hosts.size(); i++) {
+            for (size_t i = 0; i < hosts.size(); i++) {
                 common::Host& host = hosts[i];
                 std::string indexs(std::to_string(i));
                 XLOG("%v\t%v服\t%v\t",
@@ -77,7 +77,7 @@ int main(int argc, char **argv) {
 
     std::vector<common::Host> hosts;
     config.GetHostsByOptions(options, &hosts);
-    for (int i = 0; i < hosts.size(); i++) {
+    for (size_t i = 0; i < hosts.size(); i++) {
         common::Host& host = hosts[i];
         common::SSH2Client client(
             host.user, host.password, host.ip, host.port, host.alias);

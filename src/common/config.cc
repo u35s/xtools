@@ -64,7 +64,7 @@ const std::vector<std::string> Config::GetGroupNames() {
 
 bool Config::GetHost(const std::string& group, int index, Host* host) {
     int num = 0;
-    for (int i = 0; i < m_hosts.size(); i++) {
+    for (size_t i = 0; i < m_hosts.size(); i++) {
         if (m_hosts[i]->group == group) {
             if (num == index) {
                 *host = *m_hosts[i];
@@ -78,7 +78,7 @@ bool Config::GetHost(const std::string& group, int index, Host* host) {
 
 int Config::GetHosts(const std::string& group, const std::string& tag, std::vector<Host>* hosts) {
     int num = 0;
-    for (int i = 0; i < m_hosts.size(); i++) {
+    for (size_t i = 0; i < m_hosts.size(); i++) {
         if (m_hosts[i]->group == group) {
             std::vector<std::string>& v = m_hosts[i]->tags;
             if (tag.empty() || std::count(v.begin(), v.end(), tag) > 0) {

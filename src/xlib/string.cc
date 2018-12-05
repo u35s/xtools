@@ -54,7 +54,7 @@ std::string& Trim(std::string& str) { // NOLINT
 }
 
 bool IsNumber(const std::string& a) {
-    for (int i = 0; i < a.size(); i++) {
+    for (size_t i = 0; i < a.size(); i++) {
         if (!isdigit(a[i])) {
             return false;
         }

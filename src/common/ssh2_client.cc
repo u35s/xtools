@@ -287,7 +287,6 @@ void SSH2Client::Run(std::string cmd) {
             char buffer[0x4000];
             rc = libssh2_channel_read(channel, buffer, sizeof(buffer));
             if ( rc > 0 ) {
-                int i;
                 bytecount += rc;
                 XLOG("%v", std::string(buffer, rc));
             }

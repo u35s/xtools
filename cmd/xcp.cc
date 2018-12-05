@@ -51,7 +51,7 @@ int main(int argc, char **argv) {
 
     std::vector<common::Host> hosts;
     config.GetHostsByOptions(options, &hosts);
-    for (int i = 0; i < hosts.size(); i++) {
+    for (size_t i = 0; i < hosts.size(); i++) {
         common::Host& host = hosts[i];
         common::SSH2Client client(
             host.user, host.password, host.ip, host.port, host.alias);
