@@ -79,16 +79,21 @@ int main(int argc, char **argv) {
     config.GetHostsByOptions(options, &hosts);
     for (size_t i = 0; i < hosts.size(); i++) {
         common::Host& host = hosts[i];
-        common::SSH2Client client(
-            host.user, host.password, host.ip, host.port, host.alias);
         if (options.cmd == "l") {
+            common::SSH2Client client(
+                host.user, host.password, host.ip, host.port, host.alias);
             client.Open(false);
             client.Login();
         } else if (options.cmd == "r") {
+            common::SSH2Client client(
+                host.user, host.password, host.ip, host.port, host.alias);
             client.Open();
             client.Run(options.params);
         } else if (options.cmd == "i") {
-            client.Exec(options.params);
+            std::stringstream ss;
+            ss <<  options.params << " " << host.ip << " ";
+            ss << host.port << " " << host.user << " " << host.password;
+            system(ss.str().c_str());
         }
     }
     return 0;
