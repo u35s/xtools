@@ -232,7 +232,7 @@ void SSH2Client::Copy(std::string local_path, std::string remote_path) {
     int spin = 0;
     libssh2_struct_stat_size got = 0;
     libssh2_struct_stat_size total = 0;
-    std::string copy_file = local_path + "-" + m_ip;
+    std::string copy_file = local_path;
     std::ofstream out(copy_file, std::ofstream::out);
     IF_XFATAL(!out, "%v open fail", copy_file);
     while (got < fileinfo.st_size) {
